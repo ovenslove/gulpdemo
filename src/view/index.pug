@@ -1,0 +1,13 @@
+extends includes/layout
+
+block link
+
+block content
+    .mainContainer#mainContainer
+        p(v-text="name")
+
+
+block scripts
+    script(src="https://unpkg.com/vue@2.1.7/dist/vue.js",type="text/javascript")
+    script(src="../js/reset-font.js",type="text/javascript")
+    script(src="../js/index.js",type="text/javascript")
