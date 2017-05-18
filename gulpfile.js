@@ -10,72 +10,69 @@ var cssmin = require('gulp-clean-css');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
-var browserSync = require('browser-sync');
+var browserSync = require('browser-sync').create();
 var reload = browserSync.reload;
 
 /*js检查任务*/
-gulp.task('jshints', function () {
-	gulp.src('./src/js/*.js')
-		.pipe(jshint())
-		.pipe(jshint.reporter('default'));
+gulp.task('jshints', function() {
+    gulp.src('./src/js/*.js')
+        .pipe(jshint())
+        .pipe(jshint.reporter('default'));
 });
 
 /*Sass转换任务*/
-gulp.task('sass', function () {
-	gulp.src('./src/sass/*.scss')
-		.pipe(sass())
-		.pipe(gulp.dest('./dist/css'))
-		.pipe(cssmin())
-		.pipe(gulp.dest('./dist/css'));
+gulp.task('sass', function() {
+    gulp.src('./src/sass/*.scss')
+        .pipe(sass())
+        .pipe(gulp.dest('./dist/css'))
+        .pipe(cssmin())
+        .pipe(gulp.dest('./dist/css'))
+        .pipe(reload({ stream: true }));
 });
 
 // 合并，压缩文件
-gulp.task('scripts', ['jshints'], function () {
-	gulp.src('./src/js/*.js')
-		.pipe(gulp.dest('./dist/js'))
-		.pipe(concat('main.js'))
-		.pipe(gulp.dest('./dist/js'))
-		.pipe(uglify())
-		.pipe(rename('main.min.js'))
-		.pipe(gulp.dest('./dist/js'));
+gulp.task('scripts', ['jshints'], function() {
+    gulp.src('./src/js/*.js')
+        .pipe(gulp.dest('./dist/js'))
+        .pipe(concat('main.js'))
+        .pipe(gulp.dest('./dist/js'))
+        .pipe(uglify())
+        .pipe(rename('main.min.js'))
+        .pipe(gulp.dest('./dist/js'))
+        .pipe(reload({ stream: true }));
 });
 
-gulp.task('browser-sync', function () {
-	var files = [
+// 静态服务器 + 监听 scss/pug/js/图片 文件
+gulp.task('server', function() {
+    var files = [
         './dist/**/*.*'
-     ];
+    ];
+    browserSync.init({
+        server: "./dist/"
+    });
 
-	browserSync.init(files, {
-		proxy: 'localhost:/gulp-project/dianshangbao/dist/view',
-		browser: 'chrome',
-		notify: false,
-		port: 4001
-	});
-
-	gulp.watch(files).on("change", reload);
+    gulp.watch("./src/**/*.pug", ['pug']);
+    gulp.watch("./src/sass/*.scss", ['sass']);
+    gulp.watch("./src/js/*.js", ['scripts']);
+    gulp.watch("./src/images/*.*", ['imgmin']);
+    gulp.watch("./dist/*/*.*").on('change', reload);
 });
 
 /*jade转换任务*/
-gulp.task('templates', function () {
-	gulp.src('./src/view/*.pug')
-		.pipe(pug())
-		.pipe(gulp.dest('./dist/view'));
+gulp.task('pug', function() {
+    gulp.src('./src/**/*.pug')
+        .pipe(pug())
+        .pipe(gulp.dest('./dist'))
+        .pipe(reload({ stream: true }));
 });
 
 /*image照片压缩*/
-gulp.task('imgmin', function () {
-	gulp.src('./src/images/*.*')
-		.pipe(imagemin())
-		.pipe(gulp.dest('./dist/images'));
+gulp.task('imgmin', function() {
+    gulp.src('./src/images/*.*')
+        .pipe(imagemin())
+        .pipe(gulp.dest('./dist/images'))
+        .pipe(reload({ stream: true }));
 });
 
 // 默认任务
-gulp.task('default', ['imgmin', 'browser-sync']);
-
-// 监听文件变化
-
-gulp.watch([
-    './src/js/*.js',
-    './src/sass/*.scss',
-    './src/view/**/*.pug'
-], ['sass', 'scripts', 'templates', 'imgmin']);
+gulp.task('default', ['server', 'imgmin']);

@@ -1,0 +1,6 @@
+@function px2vw($n) {
+    @return #{$n /750*100}vw;
+}
+
+// 变量命名例子
+$backGroundColor:#ccc;
